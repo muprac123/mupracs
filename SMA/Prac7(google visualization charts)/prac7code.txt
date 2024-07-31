@@ -1,0 +1,112 @@
+# Function to get tweets
+def get_tweets(name, modes, no):
+    tweets = scraper.get_tweets(name, mode=modes, number=no)
+    final_tweets = []
+    for x in tweets['tweets']:
+        data = [x['link'], x['text'], x['date'], x['stats']['likes'], x['stats']['comments']]
+        final_tweets.append(data)
+    dat = pd.DataFrame(final_tweets, columns=['twitter_link', 'text', 'date', 'likes', 'comments'])
+    return dat
+
+# Fetch tweets with term 'World cup 2023'
+data = get_tweets('World cup 2023', 'term', 10)
+
+# HTML template for Google Visualization Charts
+html_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Social Media Data Visualization</title>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {'packages':['corechart', 'table']});
+        google.charts.setOnLoadCallback(drawCharts);
+
+        function drawCharts() {
+            var lineData = new google.visualization.DataTable();
+            lineData.addColumn('string', 'Date');
+            lineData.addColumn('number', 'Likes');
+            lineData.addRows([
+                {% for row in data.itertuples() %}
+                    ['{{ row.date }}', {{ row.likes }}],
+                {% endfor %}
+            ]);
+            var lineOptions = {
+                title: 'Likes Over Time',
+                curveType: 'function',
+                legend: { position: 'bottom' }
+            };
+            var lineChart = new google.visualization.LineChart(document.getElementById('line_chart'));
+            lineChart.draw(lineData, lineOptions);
+
+            var pieData = new google.visualization.DataTable();
+            pieData.addColumn('string', 'Tweet');
+            pieData.addColumn('number', 'Comments');
+            pieData.addRows([
+                {% for row in data.itertuples() %}
+                    ['{{ row.text|truncate(50) }}', {{ row.comments }}],
+                {% endfor %}
+            ]);
+            var pieOptions = {
+                title: 'Comments Distribution',
+                is3D: true,
+            };
+            var pieChart = new google.visualization.PieChart(document.getElementById('pie_chart'));
+            pieChart.draw(pieData, pieOptions);
+
+            var barData = new google.visualization.DataTable();
+            barData.addColumn('string', 'Tweet');
+            barData.addColumn('number', 'Likes');
+            barData.addRows([
+                {% for row in data.itertuples() %}
+                    ['{{ row.text|truncate(50) }}', {{ row.likes }}],
+                {% endfor %}
+            ]);
+            var barOptions = {
+                title: 'Likes Distribution',
+                chartArea: {width: '50%'},
+                hAxis: {
+                    title: 'Likes',
+                    minValue: 0
+                },
+                vAxis: {
+                    title: 'Tweet'
+                }
+            };
+            var barChart = new google.visualization.BarChart(document.getElementById('bar_chart'));
+            barChart.draw(barData, barOptions);
+
+            var tableData = new google.visualization.DataTable();
+            tableData.addColumn('string', 'Tweet');
+            tableData.addColumn('string', 'Date');
+            tableData.addColumn('number', 'Likes');
+            tableData.addColumn('number', 'Comments');
+            tableData.addRows([
+                {% for row in data.itertuples() %}
+                    ['<a href="{{ row.twitter_link }}" target="_blank">{{ row.text|truncate(50) }}</a>', '{{ row.date }}', {{ row.likes }}, {{ row.comments }}],
+                {% endfor %}
+            ]);
+            var table = new google.visualization.Table(document.getElementById('table_div'));
+            table.draw(tableData, {showRowNumber: true, width: '100%', height: '100%'});
+        }
+    </script>
+</head>
+<body>
+    <h1>Social Media Data Visualization</h1>
+    <div id="line_chart" style="width: 900px; height: 500px;"></div>
+    <div id="pie_chart" style="width: 900px; height: 500px;"></div>
+    <div id="bar_chart" style="width: 900px; height: 500px;"></div>
+    <div id="table_div" style="width: 900px; height: 500px;"></div>
+</body>
+</html>
+"""
+
+# Render the template with the data
+template = Template(html_template)
+html_content = template.render(data=data)
+
+# Save the rendered HTML to a file with UTF-8 encoding
+with open('visualization.html', 'w', encoding='utf-8') as file:
+    file.write(html_content)
+
+print("HTML file created successfully.")
