@@ -1,0 +1,40 @@
+#Part 1: pip installation
+pip install torch torchvision opencv-python yolov5
+
+#Part 2: Object Detection in Video with YOLOv5
+import cv2
+import torch
+import numpy as np
+from yolov5 import YOLOv5
+from google.colab.patches import cv2_imshow
+
+model_path = 'yolov5s.pt'  # Download from YOLOv5 repo if needed
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+yolo_model = YOLOv5(model_path, device)
+
+cap = cv2.VideoCapture('/content/5538137-hd_1920_1080_25fps.mp4')
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    results = yolo_model.predict(frame)
+
+    for *xyxy, conf, cls in results.pred[0]:  # x1, y1, x2, y2, confidence, class
+        label = results.names[int(cls)]
+        confidence = f"{conf:.2f}"
+
+        cv2.rectangle(frame, (int(xyxy[0]), int(xyxy[1])), (int(xyxy[2]), int(xyxy[3])), (0, 255, 0), 2)
+
+        cv2.putText(frame, f"{label} {confidence}", (int(xyxy[0]), int(xyxy[1]) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+    cv2_imshow(frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()

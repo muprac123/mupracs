@@ -1,0 +1,59 @@
+#Part 1: pip installation
+pip install torch torchvision yolov5 deep_sort_realtime
+
+#Part 2: Code
+import cv2
+import torch
+from yolov5 import YOLOv5
+from deep_sort_realtime.deepsort_tracker import DeepSort
+# Import the necessary function for displaying images in Colab
+from google.colab.patches import cv2_imshow
+
+# Initialize YOLOv5 model
+model_path = 'yolov5s.pt'  # Adjust path to your YOLOv5 model file
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+yolo_model = YOLOv5(model_path, device)
+
+# Initialize Deep SORT tracker
+tracker = DeepSort(max_age=30, n_init=3, nn_budget=100)
+
+# Open video file
+cap = cv2.VideoCapture('/content/5538137-hd_1920_1080_25fps.mp4')
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Run object detection
+    results = yolo_model.predict(frame)
+
+    # Prepare detections for the tracker
+    detections = []
+    for *xyxy, conf, cls in results.pred[0]:
+        bbox = [int(xyxy[0]), int(xyxy[1]), int(xyxy[2]) - int(xyxy[0]), int(xyxy[3]) - int(xyxy[1])]
+        detections.append((bbox, conf, cls))
+
+    # Pass detections to the tracker
+    tracks = tracker.update_tracks(detections, frame=frame)
+
+    # Loop over the tracks and draw boxes with IDs
+    for track in tracks:
+        if not track.is_confirmed():
+            continue
+        track_id = track.track_id
+        bbox = track.to_tlbr()  # Get bounding box in (x1, y1, x2, y2) format
+
+        # Draw bounding box and label on the frame
+        cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
+        cv2.putText(frame, f"ID: {track_id}", (int(bbox[0]), int(bbox[1]) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+    # Display the frame using cv2_imshow instead of cv2.imshow
+    cv2_imshow(frame)
+
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()

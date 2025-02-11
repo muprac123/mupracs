@@ -1,0 +1,44 @@
+#Part 1: pip installation
+!pip install ultralytics
+!pip install opencv-python
+
+#Part 2: Code
+import cv2
+import torch
+from ultralytics import YOLO
+from google.colab.patches import cv2_imshow
+
+model_path = 'yolov5su.pt'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+yolo_model = YOLO(model_path)
+
+cap = cv2.VideoCapture('/content/mixkit-snail-moving-through-a-garden-15240-hd-ready.mp4')
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+    
+    results = yolo_model(frame)
+
+    for det in results[0].boxes:  # Adjusting the result structure for 'yolov5su'
+        x1, y1, x2, y2 = det.xyxy[0].tolist()  # Using the xyxy format
+        conf = det.conf[0].item()  # Confidence score
+        cls = int(det.cls[0].item())  # Class index
+        label = results[0].names[cls]  # Get the class label
+
+        confidence = f"{conf:.2f}"
+
+        cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), (0, 255, 0), 2)
+
+        text_size = cv2.getTextSize(f"{label} {confidence}", cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)[0]
+        text_w, text_h = text_size
+        cv2.rectangle(frame, (int(x1), int(y1) - 20), (int(x1) + text_w, int(y1)), (0, 255, 0), -1)
+        cv2.putText(frame, f"{label} {confidence}", (int(x1), int(y1) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+
+    cv2_imshow(frame)
+    cv2.waitKey(1)
+
+cap.release()
+cv2.destroyAllWindows()

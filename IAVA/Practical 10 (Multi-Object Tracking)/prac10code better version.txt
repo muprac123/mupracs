@@ -1,0 +1,53 @@
+#Part 1: pip installation
+!pip install torch torchvision yolov5 deep_sort_realtime
+
+#Part 2: Code
+import cv2
+import torch
+from yolov5 import YOLOv5
+from deep_sort_realtime.deepsort_tracker import DeepSort
+from google.colab.patches import cv2_imshow
+
+model_path = 'path_to_yolov5_model/yolov5s.pt'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+yolo_model = YOLOv5(model_path, device)
+
+tracker = DeepSort(max_age=30, n_init=3, nn_budget=100)
+
+cap = cv2.VideoCapture('/content/5538137-hd_1920_1080_25fps.mp4')
+
+frame_skip = 5
+frame_count = 0
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    frame_count += 1
+    if frame_count % frame_skip != 0:
+        continue
+
+    results = yolo_model.predict(frame)
+
+    detections = []
+    for *xyxy, conf, cls in results.pred[0]:
+        bbox = [int(xyxy[0]), int(xyxy[1]), int(xyxy[2]) - int(xyxy[0]), int(xyxy[3]) - int(xyxy[1])]
+        detections.append((bbox, conf, cls))
+
+    tracks = tracker.update_tracks(detections, frame=frame)
+
+    for track in tracks:
+        if not track.is_confirmed():
+            continue
+        track_id = track.track_id
+        bbox = track.to_tlbr()
+
+        cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), (0, 255, 0), 2)
+        cv2.putText(frame, f"ID: {track_id}", (int(bbox[0]), int(bbox[1]) - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+    cv2_imshow(frame)
+
+cap.release()
+cv2.destroyAllWindows()
