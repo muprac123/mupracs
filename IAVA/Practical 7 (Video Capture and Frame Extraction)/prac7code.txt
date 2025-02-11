@@ -1,0 +1,34 @@
+Part 1: Code
+import cv2
+import os
+
+def extract_frames(video_path, output_dir, frame_interval):
+  if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+  cap = cv2.VideoCapture(video_path)
+  frame_count = 0
+
+  while cap.isOpened():
+    ret, frame = cap.read()
+
+    if not ret:
+      break
+
+    if frame_count % frame_interval == 0:
+      output_path = os.path.join(output_dir, f"frame_{frame_count}.jpg")
+      cv2.imwrite(output_path, frame)
+
+    frame_count += 1
+
+  cap.release()
+  cv2.destroyAllWindows()
+
+#Part 2: Usage
+video_path = "/content/5877829-hd_1080_1920_30fps.mp4" # Replace with your video path
+output_dir = "/content/extracted_frames_2"
+frame_interval = 30 # Extract every 30 frames
+
+extract_frames(video_path, output_dir, frame_interval)
+
+print("Frame extraction completed.")

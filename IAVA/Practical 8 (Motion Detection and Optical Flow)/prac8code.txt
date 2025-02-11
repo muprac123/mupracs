@@ -1,0 +1,47 @@
+#Part 1: Motion Detection with Background Subtraction
+
+import cv2
+from google.colab.patches import cv2_imshow
+
+cap = cv2.VideoCapture('/content/butterfly_flower_insect_nature_515.mp4')
+
+bg_subtractor = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectShadows=True)
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    fg_mask = bg_subtractor.apply(frame)
+
+    cv2_imshow(fg_mask)
+
+    if cv2.waitKey(30) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
+
+#Part 2: Optical Flow Analysis
+
+import cv2
+from google.colab.patches import cv2_imshow
+
+cap = cv2.VideoCapture('/content/butterfly_flower_insect_nature_515.mp4')
+
+bg_subtractor = cv2.createBackgroundSubtractorMOG2(history=500, varThreshold=16, detectShadows=True)
+
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    fg_mask = bg_subtractor.apply(frame)
+
+    cv2_imshow(fg_mask)
+
+    if cv2.waitKey(30) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
