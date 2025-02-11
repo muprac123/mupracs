@@ -1,0 +1,21 @@
+import cv2
+import numpy as np
+from google.colab.patches import cv2_imshow
+
+img = cv2.imread('/content/images (1).jpg', cv2.IMREAD_GRAYSCALE)
+
+blurred_img = cv2.GaussianBlur(img, (5, 5), 0)
+
+sobel_x = cv2.Sobel(blurred_img, cv2.CV_64F, 1, 0, ksize=5)
+sobel_y = cv2.Sobel(blurred_img, cv2.CV_64F, 0, 1, ksize=5)
+sobel_combined = cv2.addWeighted(np.absolute(sobel_x), 0.5, np.absolute(sobel_y), 0.5, 0)
+
+canny_edges = cv2.Canny(blurred_img, 100, 200)
+
+cv2_imshow(img)
+cv2_imshow(blurred_img)
+cv2_imshow(sobel_combined)
+cv2_imshow(canny_edges)
+
+cv2.waitKey(0)
+cv2.destroyAllWindows()
