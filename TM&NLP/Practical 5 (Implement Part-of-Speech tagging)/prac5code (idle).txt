@@ -1,0 +1,25 @@
+import nltk
+from collections import Counter
+import matplotlib.pyplot as plt
+
+text = """
+Natural language processing (NLP) is a subfield of artificial intelligence that focuses on the interaction between computers and human language.
+It involves tasks such as speech recognition, text classification, machine translation, sentiment analysis, and more.
+NLP has applications in various industries including healthcare, finance, entertainment, and customer service.
+The rapid development of NLP models such as transformers has revolutionized the field, enabling machines to understand and generate human language at scale.
+"""
+
+lower_case = text.lower()
+tokens = nltk.word_tokenize(lower_case)
+
+tags = nltk.pos_tag(tokens)
+print(tags)
+
+counts = Counter(tag for word, tag in tags)
+print(counts)
+
+fd = nltk.FreqDist(tokens)
+fd.plot(title='Frequency Distribution of Tokens')
+
+fd1 = nltk.FreqDist(counts.keys())
+fd1.plot(title='Frequency Distribution of POS Tags')

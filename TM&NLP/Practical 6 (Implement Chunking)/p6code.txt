@@ -1,0 +1,25 @@
+import nltk
+from nltk import pos_tag, word_tokenize
+from nltk.chunk import RegexpParser
+
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
+
+sentence = "The quick brown fox jumps over the lazy dog."
+
+words = word_tokenize(sentence)
+
+pos_tags = pos_tag(words)
+
+chunk_grammar = r"""
+    NP: {<DT>?<JJ>*<NN>}
+"""
+
+chunk_parser = RegexpParser(chunk_grammar)
+
+chunk_tree = chunk_parser.parse(pos_tags)
+
+chunk_tree.pretty_print()
+
+for subtree in chunk_tree.subtrees(filter=lambda t: t.label() == 'NP'):
+    print("Chunked phrase:", " ".join(word for word, pos in subtree.leaves()))

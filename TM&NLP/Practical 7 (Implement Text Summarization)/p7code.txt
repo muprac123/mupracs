@@ -1,0 +1,19 @@
+from nltk.tokenize import word_tokenize, sent_tokenize
+from nltk.corpus import stopwords
+
+with open('C:/Users/Computer/Downloads/TM&NLP/Practical 7 (Implement Text Summarization)/p7readtext.txt', 'r', encoding='utf-8') as f:
+    text = f.read()
+
+words = word_tokenize(text)
+sents = sent_tokenize(text)
+stopwords_set = set(stopwords.words('english'))
+
+freqTable = {word.lower(): words.count(word) for word in set(words) if word.lower() not in stopwords_set}
+
+sentValue = {sent: sum(freqTable.get(word.lower(), 0) for word in word_tokenize(sent)) for sent in sents}
+
+avg = sum(sentValue.values()) / len(sents) if sents else 0
+
+summary = " ".join(sent for sent in sents if sent in sentValue and sentValue[sent] > 1.2 * avg)
+
+print(summary)
