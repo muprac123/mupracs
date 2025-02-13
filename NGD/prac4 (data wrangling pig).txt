@@ -1,0 +1,103 @@
+1)Create a CSV file dataset using Text Editor and save its as emp_data.csv 
+
+id,name,age,city,salary 
+1,John Doe,28,New York,-50000 
+2,Jane Smith,34,Los Angeles,60000 
+3,Mike Johnson,25,Chicago,45000.45 
+4,Linda Green,40,New York,75000.55 
+5,James White,29,Los Angeles,55000 
+6,Patricia Brown,50,Chicago,-80000 
+7,Robert Black,,New York,48000 
+8,Emily Davis,27,Chicago,49000 
+9,William Harris,35,Los Angeles,62000 
+10,Elizabeth Clark,30,New York,52000 
+
+
+2)Create a CSV file dataset using Text Editor and save its as dept_data.csv 
+id,dept 
+1,Sales 
+2,Marketing 
+3,IT 
+4,HR 
+5,Finance 
+6,Operations 
+7,Sales 
+8,IT
+9,Marketing 
+10,HR
+ 
+
+3)Upload the CSV files to hadoop file system
+hadoop fs -put emp_data.csv
+hadoop fs -put dept_data.csv
+hadoop fs -ls
+
+
+4)Start Apache Pig by entering pig command
+pig
+
+5)Use the LOAD function to load data from HDFS or a local file
+raw_data = LOAD 'emp_data.csv' USING PigStorage(',') AS (id:int, name:chararray, age:int, city:chararray, salary:float); 
+
+
+6)Inspect the Data 
+Use the DUMP or DESCRIBE commands to understand the schema and verify the data 
+
+DESCRIBE raw_data; 
+DUMP raw_data; 
+
+
+7)Data Cleaning Remove Null or Invalid Entries: 
+clean_data = FILTER raw_data BY (age IS NOT NULL AND salary > 0); 
+
+DUMP clean_data
+
+
+8)Format Data 
+formatted_data = FOREACH clean_data GENERATE id, name, age, city, ROUND(salary) AS salary_rounded; 
+
+DUMP formatted_data
+
+
+9)Data Transformation
+Group Data: 
+grouped_data = GROUP formatted_data BY city; 
+
+DUMP grouped data;
+
+
+10)Aggregate Data
+city_salary = FOREACH grouped_data GENERATE group AS city, AVG(formatted_data.salary_rounded) AS avg_salary;
+
+DUMP city_salary
+
+
+11)Store Results 
+Save the processed data back to HDFS or export it to a file
+
+STORE city_salary INTO 'emp_data' USING PigStorage(','); 
+
+
+12)Join Datasets
+other_data = LOAD ‘dept_data.csv' USING PigStorage(',') AS (id:int, dept:chararray); 
+joined_data = JOIN formatted_data BY id, other_data BY id; 
+
+DUMP joined_data;
+
+
+13)Data Filtering and Sorting 
+Filter Specific Records
+
+high_earners = FILTER formatted_data BY salary_rounded > 50000; 
+
+
+Sort Data
+
+sorted_data = ORDER high_earners BY salary_rounded DESC; 
+
+
+14)Store Results 
+Save the processed data back to HDFS or export it to a file
+
+STORE sorted_data INTO 'joint_data' USING PigStorage(',');
+

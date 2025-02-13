@@ -1,0 +1,45 @@
+Mongo DB installation
+https://drive.google.com/drive/folders/1qKNUHORK9ZdXwVR9FM4SG_H1DA3vlpTu?usp=sharing
+https://www.mycompiler.io/online-mongodb-editor
+
+1. Insert documents into the students collection: 
+
+db.students.insertMany([
+  { studentId: 1, name: "Alice Johnson", age: 21, subjects: ["Math", "Physics", "Computer Science"], scores: { math: 85, physics: 90, cs: 92 }, city: "New York", enrollmentYear: 2021 },
+  { studentId: 2, name: "Bob Smith", age: 22, subjects: ["Math", "Biology", "Chemistry"], scores: { math: 75, biology: 80, chemistry: 78 }, city: "San Francisco", enrollmentYear: 2020 },
+  { studentId: 3, name: "Charlie Brown", age: 23, subjects: ["Math", "Physics", "Economics"], scores: { math: 65, physics: 70, economics: 75 }, city: "Los Angeles", enrollmentYear: 2019 },
+  { studentId: 4, name: "Diana Prince", age: 20, subjects: ["Math", "Physics", "Computer Science"], scores: { math: 95, physics: 89, cs: 99 }, city: "New York", enrollmentYear: 2022 }
+]);
+
+
+2. Using Conditional Operators 
+Find students who scored above 80 in Math and are enrolled after 2020. 
+
+db.students.find({ $and: [ { "scores.math": { $gt: 80 } }, { enrollmentYear: { $gt: 2020 } } ] });
+
+
+3. Query with $or 
+Find students from either "New York" or "San Francisco". 
+
+db.students.find({ city: { $in: ["New York", "San Francisco"] } });
+
+
+4. Aggregation with Aggregate Functions 
+a. Calculate the Average Math Score 
+
+db.students.aggregate([ { $group: { _id: null, avgMathScore: { $avg: "$scores.math" } } } ]);
+
+
+b. Count Students Per City 
+
+db.students.aggregate([ { $group: { _id: "$city", count: { $sum: 1 } } } ]);
+
+
+c. Find the Top Scorer in Computer Science 
+
+db.students.aggregate([ { $project: { name: 1, city: 1, csScore: "$scores.cs" } }, { $sort: { csScore: -1 } }, { $limit: 1 } ]);
+
+
+d. Filter and Group Students Enrolled After 2020 by Age 
+
+db.students.aggregate([ { $match: { enrollmentYear: { $gt: 2020 } } }, { $group: { _id: "$age", totalStudents: { $sum: 1 } } } ]);

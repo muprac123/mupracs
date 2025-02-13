@@ -1,0 +1,45 @@
+https://download.virtualbox.org/virtualbox/6.1.4/VirtualBox-6.1.4-136177-Win.exe
+
+Create a namespace and Perform DML queries in table--
+create_namespace 'university' 
+
+Create Tables Under the Namespace--
+create 'university:students', 'info', 'marks' 
+create 'university:courses', 'details' 
+
+Insert Data (Put Queries) --
+put 'university:students', '1', 'info:name', 'John Doe' 
+put 'university:students', '1', 'info:age', '21' 
+put 'university:students', '1', 'marks:math', '85' 
+put 'university:students', '1', 'marks:science', '90' 
+put 'university:students', '2', 'info:name', 'Jane Smith' 
+put 'university:students', '2', 'info:age', '22' 
+put 'university:students', '2', 'marks:math', '78' 
+put 'university:students', '2', 'marks:science', '88' 
+put 'university:courses', '101', 'details:name', 'Computer Science' 
+put 'university:courses', '101', 'details:credits', '4'
+
+Retrieve Data (Get Queries)--
+get 'university:students', '1'
+
+get 'university:students', '2', 'info:name
+
+Scan Data (Scan Queries)--
+scan 'university:students' 
+
+Update Data (Another Put Query) --
+put 'university:students', '1', 'marks:math', '88'
+
+Delete Specific Data (Delete Query) --
+delete 'university:students', '1', 'marks:science'
+
+Delete an Entire Row--
+deleteall 'university:students', '2'
+
+Count the Number of Rows--
+count 'university:students' 
+
+Drop a Table --
+disable 'university:students' 
+drop 'university:students'
+

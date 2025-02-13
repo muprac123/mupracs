@@ -1,0 +1,65 @@
+Creating Nodes
+CREATE (john:Person {name: 'John Doe', age: 30, city: 'New York'}),
+(jane:Person {name: 'Jane Smith', age: 25, city: 'Los Angeles'}), 
+(alice:Person {name: 'Alice Brown', age: 32, city: 'Chicago'}), 
+(bruce:Person {name: 'Bruce Wayne', age: 29, city: 'Gotham'}),
+(neoCorp:Company {name: 'NeoCorp', industry: 'Technology'}),
+(alphaInc:Company {name: 'Alpha Inc.', industry: 'Finance'});
+
+ Creating Relationships
+MATCH (john:Person {name: 'John Doe'}), (jane:Person {name: 'Jane Smith'}), (alice:Person {name: 'Alice Brown'}), (bruce:Person {name: 'Bruce Wayne'}),(neoCorp:Company {name: 'NeoCorp'}),(alphaInc:Company {name: 'Alpha Inc.'})
+CREATE
+(john)-[:WORKS_FOR {since: 2015}]->(neoCorp),
+(bruce)-[:WORKS_FOR {since: 2017}]->(neoCorp),
+(jane)-[:WORKS_FOR {since: 2018}]->(alphaInc),
+(john)-[:FRIENDS_WITH {since: 2020}]->(jane), 
+(john)-[:FRIENDS_WITH {since: 2019}]->(alice), 
+(jane)-[:FRIENDS_WITH {since: 2021}]->(alice);
+
+Retrieve All Nodes
+MATCH (n) RETURN n;
+
+Retrieve Specific Nodes
+MATCH (p:Person) RETURN p.name, p.age, p.city;
+
+Retrieve Relationships
+MATCH (a)-[r]->(b) RETURN a.name AS From, TYPE(r) AS Relationship, 
+b.name AS To;
+
+Filter by Property
+MATCH (p:Person)-[:WORKS_FOR]->(c:Company {name: 'NeoCorp'})
+RETURN p.name AS Employee, c.name AS Company;
+
+Find Mutual Relationships
+MATCH (p1:Person {name: 'John Doe'})-[:FRIENDS_WITH]-
+(mutual)-[:FRIENDS_WITH]-(p2:Person {name: 'Jane Smith'})
+RETURN mutual.name AS MutualFriend;
+
+ Find Employees of Companies
+MATCH (p:Person)-[:WORKS_FOR]->(c:Company)
+RETURN c.name AS Company, COLLECT(p.name) AS Employees;
+
+Suggest Connections
+MATCH
+(p1:Person)-[:WORKS_FOR]->(c:Company)<-[:WORKS_FOR]-(p2:Person)
+WHERE NOT (p1)-[:FRIENDS_WITH]-(p2) AND p1 <> p2
+RETURN p1.name AS Person, p2.name AS SuggestedFriend, c.name AS
+CommonCompany;
+
+ Shortest Path
+MATCH path = shortestPath((john:Person {name: 'John Doe'})-
+[:FRIENDS_WITH*..5]-(jane:Person {name: 'Jane Smith'}))
+RETURN path;
+
+Analyze Connectivity
+MATCH (p:Person)-[:FRIENDS_WITH]-(friend)
+RETURN p.name AS Person, COUNT(friend) AS NumberOfConnections;
+
+Find Influential Companies
+MATCH (c:Company)<-[:WORKS_FOR]-(employee)
+RETURN c.name AS Company, COUNT(employee) AS EmployeeCount
+ORDER BY EmployeeCount DESC;
+
+ Cleaning Up the Database
+To delete all data:
+MATCH (n) DETACH DELETE n;

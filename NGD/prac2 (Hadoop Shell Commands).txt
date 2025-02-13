@@ -1,0 +1,65 @@
+https://download.virtualbox.org/virtualbox/6.1.4/VirtualBox-6.1.4-136177-Win.exe
+
+Hadoop Shell Commands
+1.	
+hadoop fs –ls
+Lists the contents of a directory in HDFS. 
+Example: hadoop fs -ls /user/hadoop/
+
+2.	
+hadoop fs –mkdir
+Creates directories in HDFS. 
+Example: hadoop fs -mkdir data
+
+3.
+hadoop fs –put
+Uploads a file or directory from the local filesystem to HDFS. 
+Example: hadoop fs -put localfile.txt
+
+4.
+hadoop fs –get
+Downloads files or directories from HDFS to the local filesystem.
+Example: hadoop fs -get data.txt
+
+5.
+hadoop fs –rm
+Removes files or directories from HDFS. 
+Example: hadoop fs -rm data.txt
+
+6.
+hadoop fs –rmdir
+Removes an empty directory from HDFS. 
+Example: hadoop fs -rmdir emptydir
+
+7.
+hadoop fs –cat
+Displays the contents of a file in HDFS. 
+Example: hadoop fs -cat file.txt
+
+8.
+hadoop fs –mv
+Moves files or directories within HDFS. 
+Example: hadoop fs -mv file1.txt renamed_file1.txt
+
+9.
+hadoop fs –cp
+Copies files or directories within HDFS. 
+Example: hadoop fs -cp file1.txt file2.txt
+
+10.
+hadoop fs –du
+Shows the disk usage of files and directories in HDFS. 
+Example: hadoop fs -du
+
+11.
+hadoop fs –count
+Displays file and directory count, space used, and space available in HDFS. 
+Example: hadoop fs -count
+
+12.
+hadoop fs –tail
+Shows the last part of a file in HDFS. 
+Example: hadoop fs -tail logs.txt
+
+
+

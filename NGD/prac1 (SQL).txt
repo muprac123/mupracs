@@ -1,0 +1,57 @@
+. Create a Table 
+CREATE TABLE students ( student_id INT AUTO_INCREMENT PRIMARY KEY,  name VARCHAR(50) NOT NULL, age INT, class VARCHAR(10)); 
+
+Alter a Table 
+ALTER TABLE students ADD COLUMN address VARCHAR(100);
+
+Rename a Table 
+RENAME TABLE students TO student_details;
+
+Create an Index 
+CREATE INDEX idx_class ON student_details(class);
+
+Drop a Table 
+DROP TABLE students;
+
+. Insert Data 
+INSERT INTO student_details (name, age, class, address) VALUES ('John Doe', 18, '12A', '123 Elm Street'); 
+
+Update Data 
+UPDATE student_details SET age = 19 WHERE name = 'John Doe'; 
+
+Delete Data 
+DELETE FROM student_details WHERE age < 18;
+
+Select Data 
+SELECT * FROM student_details WHERE class = '12A'; 
+
+Insert Multiple Rows 
+INSERT INTO student_details (name, age, class, address) VALUES ('Jane Smith', 17, '11B', '456 Oak Avenue'), ('Michael Brown', 18, '12A', '789 Pine Road');
+
+Start a Transaction 
+START TRANSACTION;
+
+insert and Rollback 
+INSERT INTO student_details (name, age, class, address) VALUES ('Temporary  Student', 20, '12C', '999 Test Road'); 
+ROLLBACK;
+
+Insert and Commit 
+START TRANSACTION; 
+INSERT INTO student_details (name, age, class, address) VALUES ('Final Student', 21, '12D', '888 Final Ave'); 
+COMMIT;
+
+.Savepoint and Rollback 
+START TRANSACTION; 
+INSERT INTO student_details (name, age, class, address) VALUES ('Savepoint Test', 19, '11A', '101 Save St'); 
+SAVEPOINT sp1; 
+INSERT INTO student_details (name, age, class, address) VALUES ('Undo This', 20, '11B', '202 Undo Ave'); 
+ROLLBACK TO sp1; 
+COMMIT; 
+
+Set Transaction Isolation Level 
+SET TRANSACTION ISOLATION LEVEL READ COMMITTED; 
+START TRANSACTION; 
+SELECT * FROM student_details WHERE class = '12A'; 
+COMMIT;
+
+

@@ -1,0 +1,24 @@
+ Create a Text File--
+touch input.txt
+vim input.txt
+cat input.txt
+
+Copy the File to HDFS: Open a terminal and execute--
+hadoop fs -mkdir /user/cloudera/wordcount 
+hadoop fs -put input.txt /user/cloudera/wordcount
+
+ Type the code using text editor--
+lines = LOAD '/user/cloudera/wordcount/input.txt' AS (line:chararray); 
+words = FOREACH lines GENERATE FLATTEN(TOKENIZE(line)) AS 
+word; 
+grouped = GROUP words BY word; 
+word_count = FOREACH grouped GENERATE group AS word, 
+COUNT(words) AS count; 
+STORE word_count INTO 'wordcount/output' USING PigStorage('\t');
+
+
+Execute the pig script
+pip pig1.pig
+
+View the output: 
+hadoop fs -ls /user/cloudera/wordcount/output 

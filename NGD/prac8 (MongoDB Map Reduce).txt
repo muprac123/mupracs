@@ -1,0 +1,26 @@
+MongoDB installation
+https://drive.google.com/drive/folders/1qKNUHORK9ZdXwVR9FM4SG_H1DA3vlpTu?usp=sharing
+https://www.mycompiler.io/online-mongodb-editor
+
+1. MongoDB Command to Create and Insert Data 
+db.sales.insertMany([ { "_id": 1, "product": "Laptop", "category": "Electronics", "amount": 1500 }, { "_id": 2, "product": "Headphones", "category": "Electronics", "amount": 200 }, { "_id": 3, "product": "Shirt", "category": "Clothing", "amount": 50 }, { "_id": 4, "product": "Pants", "category": "Clothing", "amount": 100 }, { "_id": 5, "product": "Phone", "category": "Electronics", "amount": 800 }, { "_id": 6, "product": "Shoes", "category": "Footwear", "amount": 120 } ]);
+
+
+2. Map-Reduce Implementation 
+a. Map Function 
+
+var mapFunction = function() { emit(this.category, this.amount); };
+
+
+b. Reduce Function
+
+var reduceFunction = function(key, values) { return Array.sum(values); };
+
+
+c. Executing Map-Reduce 
+
+db.sales.mapReduce(mapFunction, reduceFunction, { out: "category_totals" });
+
+
+d. To view result
+db.category_totals.find().pretty();
