@@ -1,0 +1,45 @@
+from sympy import symbols, diff, Eq, solve, sqrt, pprint
+
+# Define variables
+x, y, lam = symbols('x y lambda')  # 'lambda' is a reserved word in Python, so we use 'lam'
+
+# Objective function: f(x, y) = x + y
+f_obj = x + y
+
+# Constraint function: g(x, y) = x^2 + y^2 - 1
+g_constraint = x**2 + y**2 - 1
+
+# Define the Lagrangian
+L = f_obj - lam * g_constraint
+print("Lagrangian L(x, y, lambda):")
+pprint(L)
+
+# Compute gradients (partial derivatives)
+grad_L_x = diff(L, x)
+grad_L_y = diff(L, y)
+grad_L_lam = diff(L, lam)  # = -g_constraint
+
+print("\nPartial derivatives set to zero:")
+print(f"dL/dx = {grad_L_x} = 0")
+print(f"dL/dy = {grad_L_y} = 0")
+print(f"dL/dlam = {grad_L_lam} = 0 (i.e., g = 0)")
+
+# Solve the system of equations
+eq1 = Eq(grad_L_x, 0)
+eq2 = Eq(grad_L_y, 0)
+eq3 = Eq(g_constraint, 0)
+
+solutions = solve([eq1, eq2, eq3], (x, y, lam), dict=True)
+
+print("\nSolutions [x, y, lambda]:")
+pprint(solutions)
+
+# Evaluate objective function at the optimal points
+print("\nOptimal Points and Function Values:")
+for sol in solutions:
+    x_val_f = sol[x].evalf()
+    y_val_f = sol[y].evalf()
+    lam_val_f = sol[lam].evalf()
+    f_val_f = f_obj.subs({x: sol[x], y: sol[y]}).evalf()
+    
+    print(f"Optimal Point: x = {x_val_f:.15f}, y = {y_val_f:.15f}, lambda = {lam_val_f:.15f}, f(x, y) = {f_val_f:.12f}")

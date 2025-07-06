@@ -1,0 +1,90 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Objective function: Sphere function
+def sphere(x_vector):
+    return np.sum(x_vector**2)
+
+class Particle:
+    def __init__(self, dim, bounds):
+        self.position = np.random.uniform(bounds[0], bounds[1], dim)
+        self.velocity = np.random.uniform(-(bounds[1] - bounds[0]) * 0.1, (bounds[1] - bounds[0]) * 0.1, dim)  # Initial velocity heuristic
+        self.best_position = self.position.copy()
+        self.best_score = sphere(self.best_position)
+
+    def update_velocity(self, global_best_position, w, c1, c2, dim, bounds_particle):
+        r1, r2 = np.random.rand(dim), np.random.rand(dim)
+        cognitive_velocity = c1 * r1 * (self.best_position - self.position)
+        social_velocity = c2 * r2 * (global_best_position - self.position)
+        self.velocity = w * self.velocity + cognitive_velocity + social_velocity
+
+        # Optional: Velocity clamping
+        v_max = (bounds_particle[1] - bounds_particle[0]) * 0.5  # Max 50% of range per step
+        self.velocity = np.clip(self.velocity, -v_max, v_max)
+
+    def update_position(self, bounds_particle):
+        self.position += self.velocity
+        self.position = np.clip(self.position, bounds_particle[0], bounds_particle[1])
+        current_score = sphere(self.position)
+        if current_score < self.best_score:
+            self.best_score = current_score
+            self.best_position = self.position.copy()
+
+def pso(objective_func, dim, bounds, num_particles, max_iter, w=0.5, c1=1.5, c2=1.5):
+    swarm = [Particle(dim, bounds) for _ in range(num_particles)]
+    global_best_score = float('inf')
+    global_best_position = np.zeros(dim)
+
+    for particle in swarm:
+        if particle.best_score < global_best_score:
+            global_best_score = particle.best_score
+            global_best_position = particle.best_position.copy()
+
+    history_gbest_val = [global_best_score]
+
+    for iteration in range(max_iter):
+        for particle in swarm:
+            particle.update_velocity(global_best_position, w, c1, c2, dim, bounds)
+            particle.update_position(bounds)
+
+            if particle.best_score < global_best_score:
+                global_best_score = particle.best_score
+                global_best_position = particle.best_position.copy()
+
+        history_gbest_val.append(global_best_score)
+        if iteration % 10 == 0 or iteration == max_iter - 1:
+            print(f"Iteration {iteration}: Best Score = {global_best_score:.4e}")
+
+    # Visualization for 2D case (handled outside if figures are pre-generated)
+    # if dim == 2:
+    #     plt.figure(figsize=(8, 6))
+    #     final_positions = np.array([p.position for p in swarm])
+    #     plt.scatter(final_positions[:, 0], final_positions[:, 1], alpha=0.5, label='Particles')
+    #     plt.scatter(global_best_position[0], global_best_position[1], color='red', marker='*', s=200, label='Global Best')
+    #     plt.title('Final Particle Positions')
+    #     plt.xlabel('x')
+    #     plt.ylabel('y')
+    #     plt.legend()
+    #     plt.grid(True)
+    #     plt.show()
+
+    #     plt.figure(figsize=(8, 4))
+    #     plt.plot(history_gbest_val)
+    #     plt.title('Best Score vs Iteration')
+    #     plt.xlabel('Iteration')
+    #     plt.ylabel('Best Score')
+    #     plt.grid(True)
+    #     plt.show()
+
+    return global_best_position, global_best_score
+
+# Example usage (commented out for inclusion in larger document)
+# if __name__ == "__main__":
+#     problem_dim = 2
+#     search_bounds = (-10, 10)
+#     particles_count = 30
+#     iterations_count = 100
+#     best_pos_pso, best_score_pso = pso(sphere, problem_dim, search_bounds, particles_count, iterations_count)
+#     print(f"\n--- PSO Optimization Complete ---")
+#     print(f"Global Best Position: {best_pos_pso}")
+#     print(f"Global Best Score: {best_score_pso:.6e}")

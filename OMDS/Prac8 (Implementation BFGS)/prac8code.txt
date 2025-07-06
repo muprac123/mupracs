@@ -1,0 +1,90 @@
+#Example: Manual Calculation for 1 Iteration (Minimization)
+
+#Minimize:
+    f(x, y) = (x − 2)^2 + (y − 3)^2
+
+#Initial guess:
+    x0 = (0, 0)^T
+
+#Gradient of f(x, y):
+    ∇f(x, y) = [ 2(x − 2)
+                 2(y − 3) ]
+
+
+
+#Minimization code
+
+import numpy as np
+from scipy.optimize import minimize
+
+# Define the objective function
+def objective_min(x):
+    return (x[0] - 2)**2 + (x[1] - 3)**2
+
+# Initial guess
+x0_min = np.array([0.0, 0.0])
+
+# Gradient (Jacobian)
+def jac_min(x):
+    return np.array([2 * (x[0] - 2), 2 * (x[1] - 3)])
+
+print("--- BFGS for Minimization Example ---")
+print("Minimizing f(x, y) = (x - 2)^2 + (y - 3)^2")
+
+# Run BFGS optimization
+result_min = minimize(objective_min, x0_min, method='BFGS', jac=jac_min, options={'disp': True})
+
+# Display results
+print("\nMinimization Results:")
+print("Optimal solution (x, y):", result_min.x)
+print("Optimal value f(x, y):", result_min.fun)
+print("Number of iterations:", result_min.nit)
+print("Gradient at solution:", result_min.jac)
+print("Inverse Hessian approximation (H_k):\n", result_min.hess_inv)
+
+if result_min.success:
+    print("Optimization successful.")
+else:
+    print("Optimization failed.")
+
+
+#Maximization Code
+import numpy as np
+from scipy.optimize import minimize
+
+# Objective function to maximize
+def f_maximize(x_vars):
+    x, y = x_vars
+    return -(x - 1)**2 - 2*(y - 2)**2 + 10
+
+# Since scipy.minimize minimizes, we minimize the negative of f
+def neg_f_maximize(x_vars):
+    return -f_maximize(x_vars)
+
+# Gradient (Jacobian) of the negative function
+def jac_neg_f_maximize(x_vars):
+    x, y = x_vars
+    return np.array([2*(x - 1), 4*(y - 2)])
+
+# Initial guess
+x0_max = np.array([0.0, 0.0])
+
+print("\n--- BFGS for Maximization Example ---")
+print("Maximizing f(x, y) = -(x-1)^2 - 2*(y-2)^2 + 10")
+print("(by minimizing -f(x, y))")
+
+# Run BFGS optimization
+result_max = minimize(neg_f_maximize, x0_max, method='BFGS', jac=jac_neg_f_maximize, options={'disp': True})
+
+# Display results
+print("\nMaximization Results (from minimizing -f):")
+print("Optimal solution (x, y) for original maximization problem:", result_max.x)
+print("Maximum value of f(x, y):", f_maximize(result_max.x))  # or -result_max.fun
+print("Number of iterations:", result_max.nit)
+print("Gradient of -f(x, y) at solution:", result_max.jac)
+print("Inverse Hessian approximation for -f(x, y) (H_k):\n", result_max.hess_inv)
+
+if result_max.success:
+    print("Optimization (for minimizing -f) successful.")
+else:
+    print("Optimization (for minimizing -f) failed.")

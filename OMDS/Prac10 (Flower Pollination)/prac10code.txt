@@ -1,0 +1,126 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.special import gamma
+
+# Set seed for reproducibility
+np.random.seed(42)
+
+# Objective function: Sphere
+def sphere(x_vector):
+    return np.sum(x_vector**2)
+
+# Generate Levy flight steps
+def get_levy_flight_step(beta, dim, step_size_scaling=0.01):
+    num = gamma(1 + beta) * np.sin(np.pi * beta / 2)
+    den = gamma((1 + beta) / 2) * beta * (2 ** ((beta - 1) / 2))
+    sigma_u = (num / den) ** (1 / beta)
+    u_vec = np.random.normal(0, sigma_u, dim)
+    v_vec = np.random.normal(0, 1, dim)
+    levy_step_vector = u_vec / (np.abs(v_vec) ** (1 / beta))
+    return step_size_scaling * levy_step_vector
+
+# Flower Pollination Algorithm
+def flower_pollination_algorithm(objective_func, n_population=30, dim=2, max_iter=100,
+                                 p_switch=0.8, beta_levy=1.5, bounds=(-10, 10)):
+    population = np.random.uniform(bounds[0], bounds[1], (n_population, dim))
+    fitness = np.array([objective_func(ind) for ind in population])
+
+    best_idx = np.argmin(fitness)
+    global_best_solution = population[best_idx].copy()
+    global_best_fitness = fitness[best_idx]
+
+    history_gbest_val = [global_best_fitness]
+
+    for t in range(max_iter):
+        for i in range(n_population):
+            current = population[i].copy()
+
+            if np.random.rand() < p_switch:
+                L = get_levy_flight_step(beta_levy, dim)
+                new_solution = current + L * (global_best_solution - current)
+            else:
+                idxs = np.delete(np.arange(n_population), i)
+                if len(idxs) >= 2:
+                    j, k = np.random.choice(idxs, 2, replace=False)
+                elif len(idxs) == 1:
+                    j = k = idxs[0]
+                else:
+                    j = k = i
+                epsilon = np.random.rand()
+                new_solution = current + epsilon * (population[j] - population[k])
+
+            new_solution = np.clip(new_solution, bounds[0], bounds[1])
+            new_fitness = objective_func(new_solution)
+
+            if new_fitness < fitness[i]:
+                population[i] = new_solution
+                fitness[i] = new_fitness
+                if new_fitness < global_best_fitness:
+                    global_best_fitness = new_fitness
+                    global_best_solution = new_solution.copy()
+
+        history_gbest_val.append(global_best_fitness)
+        if t % 10 == 0 or t == max_iter - 1:
+            print(f"Iteration {t}: Best Fitness = {global_best_fitness:.4e}")
+
+    return global_best_solution, global_best_fitness, history_gbest_val, population
+
+
+---
+# Run FPA
+problem_dim_fpa = 2
+search_bounds_fpa = (-10, 10)
+population_size_fpa = 30
+max_generations_fpa = 100
+
+best_sol_fpa, best_fit_fpa, history_fpa, population = flower_pollination_algorithm(
+    sphere,
+    n_population=population_size_fpa,
+    dim=problem_dim_fpa,
+    max_iter=max_generations_fpa,
+    bounds=search_bounds_fpa
+)
+
+print("\n--- FPA Optimization Complete ---")
+print(f"Global Best Solution (FPA): {best_sol_fpa}")
+print(f"Global Best Fitness (FPA): {best_fit_fpa:.6e}")
+
+
+---
+plt.figure(figsize=(8, 4))
+plt.plot(history_fpa, color='purple', linewidth=2)
+plt.title("Best Fitness vs Iteration (FPA)")
+plt.xlabel("Iteration")
+plt.ylabel("Best Fitness")
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.tight_layout()
+plt.show()
+
+---
+if problem_dim_fpa == 2:
+    plt.figure(figsize=(8, 6))
+    plt.scatter(
+        population[:, 0],
+        population[:, 1],
+        label='Flowers',
+        color='orange',
+        alpha=0.6
+    )
+    plt.scatter(
+        best_sol_fpa[0],
+        best_sol_fpa[1],
+        color='red',
+        marker='*',
+        s=200,
+        label='Global Best'
+    )
+    plt.title("Final Flower Positions (FPA)", fontsize=14)
+    plt.xlabel("x", fontsize=12)
+    plt.ylabel("y", fontsize=12)
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
+
+____

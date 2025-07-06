@@ -1,0 +1,100 @@
+#Simplex Algorithm (Tableau Method)
+
+from fractions import Fraction
+
+def simplex(c, A, b):
+    # Convert inputs to Fraction for precision
+    c = [Fraction(x) for x in c]
+    A = [[Fraction(x) for x in row] for row in A]
+    b = [Fraction(x) for x in b]
+
+    num_constraints = len(A)
+    num_variables = len(c)
+
+    # Initialize tableau
+    tableau = []
+    for i in range(num_constraints):
+        slack_coeffs = [Fraction(int(i == j)) for j in range(num_constraints)]
+        row = A[i] + slack_coeffs + [b[i]]
+        tableau.append(row)
+
+    # Add objective function row: [-c | 0s for slack | 0]
+    obj_row = [-ci for ci in c] + [Fraction(0)] * (num_constraints + 1)
+    tableau.append(obj_row)
+
+    while True:
+        # Find pivot column (most negative value in objective row, excluding RHS)
+        obj_coeffs_only = tableau[-1][:-1]
+        pivot_col_val = min(obj_coeffs_only)
+
+        if pivot_col_val >= 0:
+            break  # Optimal solution found
+
+        pivot_col_idx = obj_coeffs_only.index(pivot_col_val)
+
+        # Find pivot row using minimum ratio test
+        ratios = []
+        for i in range(num_constraints):
+            if tableau[i][pivot_col_idx] > 0:
+                ratio = tableau[i][-1] / tableau[i][pivot_col_idx]
+                ratios.append((ratio, i))
+
+        if not ratios:
+            raise Exception("Unbounded solution.")
+
+        pivot_row_idx = min(ratios, key=lambda x: x[0])[1]
+        pivot_element = tableau[pivot_row_idx][pivot_col_idx]
+
+        # Normalize pivot row
+        tableau[pivot_row_idx] = [x / pivot_element for x in tableau[pivot_row_idx]]
+
+        # Make other entries in pivot column zero
+        for i in range(len(tableau)):
+            if i != pivot_row_idx:
+                factor = tableau[i][pivot_col_idx]
+                tableau[i] = [
+                    val_i - factor * val_pivot
+                    for val_i, val_pivot in zip(tableau[i], tableau[pivot_row_idx])
+                ]
+
+    # Extract solution
+    solution = [0.0] * num_variables
+    for j in range(num_variables):
+        col = [tableau[i][j] for i in range(num_constraints)]
+        if col.count(1) == 1 and col.count(0) == num_constraints - 1:
+            basic_row = col.index(1)
+            solution[j] = float(tableau[basic_row][-1])
+
+    optimal_value = float(tableau[-1][-1])
+    return solution, optimal_value
+
+
+
+#Example problem
+
+# Coefficients of the objective function (to be maximized)
+c_example = [3, 2]
+
+# Coefficients of the inequality constraints (LHS)
+A_example = [
+    [2, 1],   # Constraint 1: 2x1 + x2 ≤ 18
+    [1, 2],   # Constraint 2: x1 + 2x2 ≤ 14
+    [1, -1]   # Constraint 3: x1 - x2 ≤ 3
+]
+
+# RHS of the inequality constraints
+b_example = [18, 14, 3]
+
+# Solve the LP problem using the simplex function
+solution, optimal_value = simplex(c_example, A_example, b_example)
+
+print("Solving LP Problem:")
+print("Maximize Z = 3*x1 + 2*x2")
+print("Subject to:")
+print(" 2*x1 + 1*x2 <= 18")
+print(" 1*x1 + 2*x2 <= 14")
+print(" 1*x1 - 1*x2 <= 3")
+print(" x1, x2 >= 0\n")
+
+print("Optimal solution (x1, x2):", solution)
+print("Optimal objective value (Z):", optimal_value)

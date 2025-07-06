@@ -1,0 +1,221 @@
+Part1
+Matrix Operations using NumPy
+
+1. Matrix Multiplication
+import numpy as np
+
+A = np.array([[2, 3], [4, 5]])
+B = np.array([[1, 2], [0, 1]])
+
+C = np.dot(A, B)
+print("Matrix Multiplication:\n", C)
+
+
+2. Matrix Inversion
+import numpy as np
+
+A = np.array([[4, 7], [2, 6]])
+A_inv = np.linalg.inv(A)
+print("Inverse of A:\n", A_inv)
+
+
+3. Determinant of a Matrix
+import numpy as np
+
+A = np.array([[3, 1], [4, 2]])
+det_A = np.linalg.det(A)
+print("Determinant of A:", det_A)
+
+
+4. Eigenvalues and Eigenvectors
+import numpy as np
+
+A = np.array([[2, 0], [0, 3]])
+eigenvalues, eigenvectors = np.linalg.eig(A)
+print("Eigenvalues:", eigenvalues)
+print("Eigenvectors:\n", eigenvectors)
+
+
+5. Rank and Trace
+import numpy as np
+
+A = np.array([[1, 2], [3, 4]])
+rank = np.linalg.matrix_rank(A)
+trace = np.trace(A)
+print("Rank:", rank)
+print("Trace:", trace)
+
+
+
+Part2
+Differentiation using SymPy
+
+
+from sympy import Matrix, symbols, diff
+
+# Define symbols and vector
+x1, x2 = symbols('x1 x2')
+x = Matrix([x1, x2])
+
+#1: Gradient of a Scalar Function
+f = x1**2 + 3*x1*x2 + x2**2
+grad_f = Matrix([diff(f, var) for var in x])
+print("Gradient:\n", grad_f)
+
+#2: Jacobian of a Vector Function
+f_vec = Matrix([x1**2 + x2, x1 + x2**2])
+J = f_vec.jacobian(x)
+print("Jacobian:\n", J)
+
+#3: Hessian Matrix
+f_hessian = x1**2 + 3*x1*x2 + x2**2
+H = Matrix([[diff(f_hessian, i, j) for j in x] for i in x])
+print("Hessian:\n", H)
+
+#4: Derivative of a Quadratic Form
+A = Matrix([[2, 1], [1, 3]])
+f_quad = (x.T * A * x)[0]  # Extract scalar
+df_dx = Matrix([diff(f_quad, var) for var in x])
+print("Derivative of (x^T A x):\n", df_dx)
+
+
+Part3
+Predicting House Prices Using Linear Regression
+
+
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LinearRegression
+
+# Step 1: Define the Dataset
+# House data: [Number of Rooms, Age of House]
+X = np.array([
+    [2, 15],
+    [3, 10],
+    [4, 8],
+    [5, 5],
+    [6, 3]
+])
+
+# Target: House prices in $1000s
+y = np.array([220, 280, 330, 400, 470])
+
+# Step 2: Standardize the Features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 3: Train the Linear Regression Model
+model = LinearRegression()
+model.fit(X_scaled, y)
+
+# Step 4: Display Model Parameters
+intercept = round(model.intercept_, 2)
+coefficients = np.round(model.coef_, 2)
+
+print("Linear Regression Results:")
+print(f"Intercept: {intercept}")
+print(f"Coefficients (for rooms, for age): {coefficients}")
+
+# Step 5: Predict Price for New Example (4 rooms, 6 years old)
+new_house = np.array([[4, 6]])
+new_house_scaled = scaler.transform(new_house)
+predicted_price = model.predict(new_house_scaled)
+
+print("\nPredicted price for a house with 4 rooms and age 6 years:")
+print(f"${predicted_price[0]:,.2f}")
+
+
+_____
+Linear Regression Results Interpretation
+We have trained a linear regression model to predict house prices using two features: the number of rooms and the age of the house. The results are as follows:
+
+1. Intercept (β₀): 340.0
+The intercept, β₀, represents the predicted price when both the number of rooms and the age of the house are zero.
+
+Intercept (β₀) = 340.0
+
+This means that the model predicts a house with zero rooms and zero age would have a price of $340,000. Although this scenario is not realistic in practice (since houses can’t have zero rooms or zero age), the intercept is a necessary parameter in the regression equation.
+
+2. Coefficients
+The coefficients represent the impact of each feature on the house price.
+
+Coefficient for Rooms (β₁): 99.83
+Interpretation: For every additional room in the house, the price is expected to increase by $99,830 (since the price is in $1000s). This result aligns with the common expectation that houses with more rooms tend to be more expensive.
+
+Coefficient for Age (β₂): 12.35
+Interpretation: For every additional year of age, the price is expected to increase by $12,350.
+This result is counterintuitive, as older houses usually depreciate in value. However, in this particular dataset, the model suggests that older houses may be valued more highly. This could be due to factors such as location, historical value, or maintenance conditions, which are not explicitly captured in the model.
+
+3. Predicted Price for a House with 4 Rooms and Age 6 Years
+For a house with 4 rooms and 6 years of age, the predicted price is calculated as:
+
+Predicted Price
+=
+𝛽
+0
++
+𝛽
+1
+×
+Rooms
++
+𝛽
+2
+×
+Age
+Predicted Price=β 
+0
+​
+ +β 
+1
+​
+ ×Rooms+β 
+2
+​
+ ×Age
+Substituting the values (assuming unscaled data for illustration purposes):
+
+Predicted Price
+=
+340
++
+(
+99.83
+×
+4
+)
++
+(
+12.35
+×
+6
+)
+=
+340
++
+399.32
++
+74.10
+=
+813.42
+Predicted Price=340+(99.83×4)+(12.35×6)=340+399.32+74.10=813.42
+So, the predicted price is $813,420.
+
+However, the actual model is trained on standardized (scaled) data, and the Python code output gives a predicted price of $333,480, calculated using:
+
+python
+Copy
+Edit
+model.predict(new_house_scaled)
+Conclusion (Based on Interpretation)
+The number of rooms is a significant factor in determining the price, with a positive relationship.
+
+The age of the house also has a positive influence, which is unusual, but may reflect factors like historical value or prime location.
+
+For a house with 4 rooms and 6 years of age:
+
+Using unscaled coefficients (for illustration), the price is $813,420.
+
+Using the trained model on scaled data, the predicted price is $333,480.
+
+

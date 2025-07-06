@@ -1,0 +1,100 @@
+#Minimize: 
+    f(x, y) = x^2 + y^2
+
+#Subject to:
+    x + y = 1       (Equality constraint)
+    x >= 0          (Inequality constraint)
+    y >= 0          (Inequality constraint)
+
+
+
+import numpy as np
+from scipy.optimize import minimize
+
+# Objective function: f(x, y) = x^2 + y^2
+def objective(vars):
+    x, y = vars
+    return x**2 + y**2
+
+# Equality constraint: x + y = 1 → x + y - 1 = 0
+def eq_constraint(vars):
+    x, y = vars
+    return x + y - 1
+
+# Inequality constraints: x ≥ 0, y ≥ 0
+constraints = [
+    {'type': 'eq', 'fun': eq_constraint},
+    {'type': 'ineq', 'fun': lambda vars: vars[0]},  # x >= 0
+    {'type': 'ineq', 'fun': lambda vars: vars[1]}   # y >= 0
+]
+
+# Initial guess (must be feasible or near feasible)
+x0 = [0.1, 0.1]
+
+# Minimize the objective with constraints
+result = minimize(objective, x0, method='SLSQP', constraints=constraints)
+
+if result.success:
+    print("Optimal solution (x, y):", result.x)
+    print("Optimal value f(x, y):", result.fun)
+    print("\nSciPy result object:")
+    print(result)
+else:
+    print("Optimization failed:", result.message)
+
+print("\nExpected output for this problem (based on manual derivation):")
+print("Optimal solution: [0.5 0.5]")
+print("Optimal value: 0.5")
+print("Success: True")
+
+
+____
+#Inequality constraints only
+
+#Minimize:
+    f(x, y) = x^2 + y^2
+
+Subject to (converted to standard KKT form):
+
+    g1(x, y) = 2 - x - y ≤ 0      (converted from x + y ≥ 2)
+    g2(x, y) = -x ≤ 0             (converted from x ≥ 0)
+    g3(x, y) = -y ≤ 0             (converted from y ≥ 0)
+
+
+
+import numpy as np
+from scipy.optimize import minimize
+
+# Objective function
+def objective_ineq(vars):
+    x, y = vars
+    return x**2 + y**2
+
+# Inequality constraints:
+# x + y >= 2  →  x + y - 2 >= 0
+# x >= 0
+# y >= 0
+cons_ineq = [
+    {'type': 'ineq', 'fun': lambda vars: vars[0] + vars[1] - 2},  # x + y - 2 >= 0
+    {'type': 'ineq', 'fun': lambda vars: vars[0]},               # x >= 0
+    {'type': 'ineq', 'fun': lambda vars: vars[1]}                # y >= 0
+]
+
+# Initial guess
+x0_ineq = [0.1, 0.1]  # Might be infeasible for x + y >= 2, but SLSQP can still work
+
+# Solve the optimization problem
+result_ineq = minimize(objective_ineq, x0_ineq, method='SLSQP', constraints=cons_ineq)
+
+# Output
+print("SciPy Solver Output (Example: Inequality Constraints Only):")
+if result_ineq.success:
+    print("Optimal solution (x, y):", result_ineq.x)
+    print("Optimal value f(x, y):", result_ineq.fun)
+else:
+    print("Optimization failed:", result_ineq.message)
+
+print("\nExpected output for this example (based on manual derivation):")
+print("Optimal solution: [1. 1.]")
+print("Optimal value: 2.0")
+

@@ -1,0 +1,46 @@
+#Setup: SymPy Imports and Symbol
+
+from sympy import symbols, Matrix, integrate, sin, exp, pprint
+t = symbols('t')
+
+#Vector Integration
+#Define the vector function
+
+v_t = Matrix([t**2, sin(t), exp(2*t)])
+print("Vector v(t):")
+pprint(v_t)
+
+#Indefinite integral
+
+int_v_t_indefinite = integrate(v_t, t)
+print("\nIndefinite integral of v(t):")
+pprint(int_v_t_indefinite)
+
+#Definite integral from t = 0 to t = 1
+
+int_v_t_definite = integrate(v_t, (t, 0, 1))
+print("\nDefinite integral of v(t) from 0 to 1:")
+pprint(int_v_t_definite)
+print("\nNumerical evaluation of definite integral of v(t):")
+pprint(int_v_t_definite.evalf())
+
+
+
+#Matrix Integration
+#Define the matrix function
+
+M_t = Matrix([[t, 1], [0, t**3]])
+print("Matrix M(t):")
+pprint(M_t)
+
+#Indefinite integral
+
+int_M_t_indefinite = integrate(M_t, t)
+print("\nIndefinite integral of M(t):")
+pprint(int_M_t_indefinite)
+
+#Definite integral from t = 0 to t = 1
+
+int_M_t_definite = integrate(M_t, (t, 0, 1))
+print("\nDefinite integral of M(t) from 0 to 1:")
+pprint(int_M_t_definite)
