@@ -1,0 +1,47 @@
+import matplotlib.pyplot as plt
+
+# Compile with accuracy metric
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Train the model and store training history
+history = model.fit(X, y, batch_size=128, epochs=10)
+
+# Plotting Loss and Accuracy
+plt.figure(figsize=(12, 5))
+
+# Loss
+plt.subplot(1, 2, 1)
+plt.plot(history.history['loss'], label='Loss', color='red')
+plt.title('Training Loss')
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.legend()
+
+# Accuracy
+plt.subplot(1, 2, 2)
+plt.plot(history.history['accuracy'], label='Accuracy', color='green')
+plt.title('Training Accuracy')
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+def generate_text(seed, length=200):
+    for _ in range(length):
+        # Convert to sequence
+        tokenized = tokenizer.texts_to_sequences([seed[-seq_length:]])[0]
+        padded = np.array(tokenized).reshape(1, -1)
+
+        # Predict next char
+        prediction = model.predict(padded, verbose=0)
+        next_char_index = np.argmax(prediction)
+        next_char = index_char[next_char_index]
+
+        # Append predicted character
+        seed += next_char
+    return seed
+
+# Example usage
+print(generate_text("To be, or not to be, that is the "))

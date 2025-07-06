@@ -1,0 +1,146 @@
+!pip install -U datasets fsspec transformers scikit-learn pandas
+
+
+---
+from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
+from datasets import load_dataset
+import pandas as pd
+from sklearn.metrics import accuracy_score, classification_report
+import warnings
+warnings.filterwarnings('ignore')
+
+
+---
+def load_sample_data():
+    """Load inbuilt dataset for text classification"""
+    try:
+        print("Loading IMDB dataset...")
+        # ✅ Load full test split and manually slice first 100
+        dataset = load_dataset("imdb", split="test")
+        dataset = dataset.select(range(100))
+
+        texts = dataset['text']
+        labels = dataset['label']  # 0=negative, 1=positive
+        label_names = ['negative', 'positive']
+
+        return texts, labels, label_names
+
+    except Exception as e:
+        print(f"Could not load IMDB dataset: {e}")
+        print("Using sample data instead...")
+
+        # Fallback sample data
+        texts = [
+            "This movie was absolutely fantastic! Great acting and plot.",
+            "Terrible movie, waste of time. Very boring and poorly made.",
+            "Amazing film with excellent cinematography and soundtrack.",
+            "Not good at all. The story was confusing and characters were weak.",
+            "Loved every minute of it! Highly recommend to everyone.",
+            "Awful acting and terrible script. Would not watch again.",
+            "Outstanding performance by all actors. Brilliant direction.",
+            "Very disappointing. Expected much better from this director."
+        ]
+
+        labels = [1, 0, 1, 0, 1, 0, 1, 0]  # 1=positive, 0=negative
+        label_names = ['negative', 'positive']
+
+        return texts, labels, label_names
+
+
+---
+def main():
+    print("=== BERT Text Classification Demo ===\n")
+
+    # Load data
+    texts, true_labels, label_names = load_sample_data()
+    print(f"Loaded {len(texts)} samples")
+
+    print("\nLoading pre-trained BERT model...")
+    model_name = "nlptown/bert-base-multilingual-uncased-sentiment"
+
+    try:
+        classifier = pipeline(
+            "sentiment-analysis",
+            model=model_name,
+            tokenizer=model_name,
+            return_all_scores=True
+        )
+        print("BERT model loaded successfully!")
+
+    except Exception as e:
+        print(f"Error loading model: {e}")
+        classifier = pipeline("sentiment-analysis", return_all_scores=True)
+
+    # Perform classification
+    print(f"\n=== Classification Results ===")
+    predictions = []
+
+    for i, text in enumerate(texts):
+        text_short = text[:200] + "..." if len(text) > 200 else text
+        result = classifier(text_short)
+
+        if isinstance(result[0], list):
+            scores = result[0]
+            pred_label = max(scores, key=lambda x: x['score'])['label']
+            confidence = max(scores, key=lambda x: x['score'])['score']
+        else:
+            pred_label = result[0]['label']
+            confidence = result[0]['score']
+
+        if pred_label.upper() in ['POSITIVE', 'POS', '1', '5 stars']:
+            pred_binary = 1
+        else:
+            pred_binary = 0
+
+        predictions.append(pred_binary)
+
+        true_label_name = label_names[true_labels[i]]
+        pred_label_name = label_names[pred_binary]
+
+        print(f"\n{i+1}. Text: {text_short}")
+        print(f"   True: {true_label_name} | Predicted: {pred_label_name} | Confidence: {confidence:.3f}")
+        status = '\u2713' if pred_binary == true_labels[i] else '\u2717'
+        print(f"   Status: {status}")
+
+
+    accuracy = accuracy_score(true_labels, predictions)
+    print(f"\n=== Performance Metrics ===")
+    print(f"Accuracy: {accuracy:.3f}")
+
+    print(f"\nClassification Report:")
+    print(classification_report(true_labels, predictions, target_names=label_names, labels=[0, 1]))
+
+
+    print(f"\n=== Interactive Classification ===")
+    print("Enter text to classify (type 'quit' to exit):")
+
+    while True:
+        user_input = input("\nText: ").strip()
+        if user_input.lower() in ['quit', 'exit', 'q']:
+            break
+
+        if user_input:
+            result = classifier(user_input)
+            if isinstance(result[0], list):
+                for score_dict in result[0]:
+                    print(f"  {score_dict['label']}: {score_dict['score']:.3f}")
+            else:
+                print(f"  {result[0]['label']}: {result[0]['score']:.3f}")
+
+    print("\nBERT classification demo completed!")
+
+
+---
+if __name__ == "__main__":
+    try:
+        import transformers
+        import datasets
+        import sklearn
+        print("All packages available!")
+        main()
+    except ImportError as e:
+        print(f"Missing package: {e}")
+        print("pip install transformers datasets scikit-learn pandas")
+
+
+____

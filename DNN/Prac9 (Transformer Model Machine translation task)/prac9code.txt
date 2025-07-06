@@ -1,0 +1,156 @@
+import torch
+from transformers import MarianMTModel, MarianTokenizer
+from datasets import load_dataset
+import pandas as pd
+from tqdm import tqdm
+import warnings
+warnings.filterwarnings('ignore')
+
+
+---
+class TransformerTranslator:
+    def __init__(self, model_name="Helsinki-NLP/opus-mt-en-fr"):
+        """Initialize transformer model for translation"""
+        print(f"Loading model: {model_name}")
+        self.tokenizer = MarianTokenizer.from_pretrained(model_name)
+        self.model = MarianMTModel.from_pretrained(model_name)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model.to(self.device)
+        print(f"Model loaded on device: {self.device}")
+
+    def translate_text(self, text):
+        """Translate a single text"""
+        inputs = self.tokenizer(text, return_tensors="pt", padding=True, truncation=True, max_length=512)
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+        with torch.no_grad():
+            outputs = self.model.generate(**inputs, max_length=512, num_beams=4, early_stopping=True)
+
+        return self.tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+    def translate_batch(self, texts, batch_size=8):
+        """Translate multiple texts"""
+        translations = []
+        for i in tqdm(range(0, len(texts), batch_size), desc="Translating"):
+            batch = texts[i:i+batch_size]
+            inputs = self.tokenizer(batch, return_tensors="pt", padding=True, truncation=True, max_length=512)
+            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+
+            with torch.no_grad():
+                outputs = self.model.generate(**inputs, max_length=512, num_beams=4, early_stopping=True)
+
+            batch_translations = [self.tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
+            translations.extend(batch_translations)
+        return translations
+
+
+---
+def evaluate_translations(original, translated, reference=None):
+    from collections import Counter
+
+    results = {
+        'total_sentences': len(original),
+        'avg_original_length': sum(len(text.split()) for text in original) / len(original),
+        'avg_translated_length': sum(len(text.split()) for text in translated) / len(translated),
+    }
+
+    if reference:
+        bleu_scores = []
+        for trans, ref in zip(translated, reference):
+            trans_words = trans.lower().split()
+            ref_words = ref.lower().split()
+            trans_counter = Counter(trans_words)
+            ref_counter = Counter(ref_words)
+            overlap = sum((trans_counter & ref_counter).values())
+            precision = overlap / len(trans_words) if trans_words else 0
+            bleu_scores.append(precision)
+
+        results['avg_bleu_1'] = sum(bleu_scores) / len(bleu_scores)
+    return results
+
+
+---
+# Load or create sample dataset for translation
+print("\nLoading sample dataset...")
+
+try:
+    # ✅ Fix: Use correct config and extract using 'translation' field
+    dataset = load_dataset("wmt14", "fr-en", split="train[:1%]")
+
+    # Extract English sentences from the 'translation' dictionary
+    source_sentences = [
+        sample['translation']['en']
+        for sample in dataset
+        if 'translation' in sample and 'en' in sample['translation']
+    ]
+
+    print(f"Loaded {len(source_sentences)} English sentences for translation.")
+
+except Exception as e:
+    print(f"Could not load WMT14 dataset: {e}")
+    print("Using manual sample sentences instead...")
+
+    # Fallback: Use predefined English sentences
+    source_sentences = [
+        "Hello, how are you today?",
+        "The weather is beautiful outside.",
+        "I love learning about artificial intelligence.",
+        "Machine translation has improved significantly with transformers.",
+        "This is a demonstration of neural machine translation.",
+        "Python is a powerful programming language.",
+        "Deep learning models require large datasets.",
+        "Natural language processing is fascinating.",
+        "Transformers revolutionized machine translation.",
+        "Thank you for your attention."
+    ]
+
+
+---
+# Instantiate the custom translator class
+translator = TransformerTranslator()
+
+
+---
+# Convert to pandas DataFrame for easier viewing
+df = dataset.to_pandas()
+
+# Rename columns for clarity
+df = df.rename(columns={'translation': 'translations'})
+df['en'] = df['translations'].apply(lambda x: x['en'])
+df['fr'] = df['translations'].apply(lambda x: x['fr'])
+
+# Take a small subset to translate (e.g., 10 random samples)
+sample_df = df.sample(n=10, random_state=42).reset_index(drop=True)
+
+# Translate English to French
+print("\n=== Batch Translation ===")
+translated_sentences = []
+for i, sentence in enumerate(sample_df['en']):
+    translated_text = translator.translate_text(sentence)
+    translated_sentences.append(translated_text)
+    print(f"\n{i+1}.")
+    print(f"EN: {sentence}")
+    print(f"FR (Reference): {sample_df['fr'][i]}")
+    print(f"FR (Translated): {translated_text}")
+
+# Evaluation: Simple BLEU score (optional)
+try:
+    from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+    smoothie = SmoothingFunction().method4
+
+    print("\n=== Evaluation (BLEU Score per Sentence) ===")
+    bleu_scores = []
+    for ref, hyp in zip(sample_df['fr'], translated_sentences):
+        ref_tokens = ref.split()
+        hyp_tokens = hyp.split()
+        score = sentence_bleu([ref_tokens], hyp_tokens, smoothing_function=smoothie)
+        bleu_scores.append(score)
+        print(f"BLEU: {score:.4f}")
+
+    print(f"\nAverage BLEU Score: {sum(bleu_scores)/len(bleu_scores):.4f}")
+
+except ImportError:
+    print("\nNLTK not installed. Skipping BLEU score evaluation.")
+
+
+____
